@@ -4,13 +4,6 @@ from tkinter import *
 from utils import segment
 from pyvirtualcam import PixelFormat, Camera
 
-# TODO: some video capture selection
-# TODO: image path browser for replacement
-# TODO: mode swapping (gaussian blur ?)
-# TODO: make it's executionable in both windows and macOS (or just windows)
-
-# Query final capture device values
-# (may be different from preferred settings)
 class Service():
     def __init__(self, stopEvent : threading.Event ):
         self.cap = cv2.VideoCapture(1)
