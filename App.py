@@ -18,7 +18,7 @@ class App(Frame):
         self._secondary_mode_status = StringVar(value='img')
         self.__createThresholdWidget()
         self.__createModeWidget()
-        self.__createSecondaryModeWidget(self._mode_status.get())
+        self.__updateSecondaryModeWidget(self._mode_status.get(), create=True)
 
         # virtualcamera service
         self.stopEvent = threading.Event()
@@ -54,7 +54,7 @@ class App(Frame):
             self.service.segment_utils.update_threshold(threshold_value)
 
     def __createModeWidget(self):
-        # update select radio button (nornal/ blur)
+        # update select radio button (normal/ blur)
         # Normal/Blur/Image
         self.mode_label = Label(
             root, text='Normal/Blur/Image:')
@@ -70,24 +70,16 @@ class App(Frame):
         self.radio_image.grid(row=2, column=2, sticky=W)
 
         def _radioModeSelect(*args):
+            self.service.segment_utils.update_mode_selected(self._mode_status.get())
+            
             print(self._mode_status.get())
             self.__updateSecondaryModeWidget(self._mode_status.get())
 
-    def __createSecondaryModeWidget(self, mode_str):
-        self.secondary_mode_label = Label(root, text='Choose Background Color')
-        self.secondary_mode_label.grid(row=3, column=1, sticky=W)
+    def __updateSecondaryModeWidget(self, mode_str, create=False):
+        if not create:
+            self.secondary_mode_label.destroy()
+            self.secondary_mode_option.destroy()
 
-        self.secondary_mode_option = Button(
-            root, text="Select Color", command=lambda: _chooseColor())
-        self.secondary_mode_option.grid(row=4, column=1, sticky=W)
-
-        def _chooseColor():
-            color_code = colorchooser.askcolor(title="Choose color")
-            print(color_code)
-
-    def __updateSecondaryModeWidget(self, mode_str):
-        self.secondary_mode_label.destroy()
-        self.secondary_mode_option.destroy()
         if mode_str == 'normal':
             self.secondary_mode_label = Label(
                 root, text='Choose Background Color')
@@ -98,14 +90,25 @@ class App(Frame):
             self.secondary_mode_label = Label(
                 root, text='Choose Background Image')
             self.secondary_mode_option = Button(
-                root, text="Choose Image", command=lambda: _chooseColor())
+                root, text="Choose Image", command=lambda: _chooseImage())
 
         self.secondary_mode_label.grid(row=3, column=1, sticky=W)
         self.secondary_mode_option.grid(row=4, column=1, sticky=W)
 
         def _chooseColor():
             color_code = colorchooser.askcolor(title="Choose color")
+            self.service.segment_utils.set_bg_color(color_code[0])
             print(color_code)
+
+        def _chooseImage():
+            file_path = askopenfile(mode='r', filetypes=[('Image Files', ['.jpeg', '.jpg', '.png',
+                                                       '.tiff', '.tif', '.bmp'])])
+            if file_path is not None:
+                print(str(file_path.name))
+                self.service.segment_utils.set_default_img(file_path.name, (self.service.width, self.service.height))
+                
+            else:
+                _chooseImage()
 
     def __createAwayFromScreenWidget(self, mode_str):
         self.secondary_mode_label = Label(root, text='Choose Background Color')
