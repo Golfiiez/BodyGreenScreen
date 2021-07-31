@@ -18,12 +18,23 @@ class SegmentUtils():
         # set mode
         self._MODE_DEF_IMG = False
         self._MODE_BG_IMG = False
+        self._MODE_BLUR = False
 
         # set default threshold
         self._THRESHOLD = threshold
 
     def update_threshold(self, threshold:float):
         self._THRESHOLD = threshold
+
+    def update_mode_selected(self, mode_str:str):
+        if mode_str == 'normal':
+            self._MODE_BLUR = False
+        
+        elif mode_str == 'blur':
+            self._MODE_BLUR = True
+
+        elif mode_str == 'image':
+            self._MODE_BLUR = False
 
     def set_bg_color(self, bg_color: tuple):
         self._MASK_COLOR = bg_color
@@ -59,9 +70,13 @@ class SegmentUtils():
         #   b) Blur the input image by applying image filtering, e.g.,
         # bg_image = cv2.GaussianBlur(image,(55,55),0)
 
-        masked_image = np.zeros(image.shape, dtype=np.uint8)
-        masked_image[:] = self._MASK_COLOR
-        output_image = np.where(condition, image, masked_image)
+        if self._MODE_BLUR:
+            masked_image = cv2.GaussianBlur(image,(55,55),0)
+            output_image = np.where(condition, image, masked_image)
+        else:
+            masked_image = np.zeros(image.shape, dtype=np.uint8)
+            masked_image[:] = self._MASK_COLOR
+            output_image = np.where(condition, image, cv2.cvtColor(masked_image, cv2.COLOR_BGR2RGB))
 
         return output_image
 
