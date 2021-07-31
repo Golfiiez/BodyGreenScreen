@@ -16,6 +16,7 @@ class SegmentUtils():
         self._DEF_COND = None
         self.width = width
         self.height = height
+        self.AWAY_FLAG = False
 
         # set mode
         self._MODE_DEF_IMG = False
@@ -61,7 +62,6 @@ class SegmentUtils():
         results = self.selfie_segmentation.process(image)
         condition = np.stack(
             (results.segmentation_mask,) * 3, axis=-1) > self._THRESHOLD
-        inv_condition = np.invert(condition)
         masked_image = np.zeros(image.shape, dtype=np.uint8)
         masked_image[:] = (0, 0, 0)
         bg_img = np.where(condition, self._BG_IMAGE, image)
@@ -99,6 +99,8 @@ class SegmentUtils():
         return np.add(blur_subject_part, bg_part).astype(np.uint8)
 
     def process_img(self, image):
+        if self.AWAY_FLAG:
+            image = self.away_from_screen_correction(image)
         if self._MODE == 'normal':
             return self.segment_human_out(image)
         elif self._MODE == 'blur':

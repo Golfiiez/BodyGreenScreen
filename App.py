@@ -11,15 +11,17 @@ from PIL import ImageColor
 class App(Frame):
     def __init__(self, root: Tk):
         self.root = root
-        root.title("PROJECT_NAME_HERE")
+        root.title("Green Screen Me Config")
 
         # widget preparation
         self._threshold_value = DoubleVar()
         self._mode_status = StringVar(value='normal')
         self._secondary_mode_status = StringVar(value='img')
+        self._away_from_screen_status = IntVar(value=0)
         self.__createThresholdWidget()
         self.__createModeWidget()
         self.__createOrUpdateSecondaryModeWidget(self._mode_status.get(), create=True)
+        self.__createAwayFromScreenWidget()
 
         # virtualcamera service
 
@@ -108,10 +110,33 @@ class App(Frame):
             file_path = askopenfile(mode='r', filetypes=[('Image Files', ['.jpeg', '.jpg', '.png',
                                                        '.tiff', '.tif', '.bmp'])])
             if file_path is not None:
-                print(str(file_path.name))
                 self.service.segment_utils.set_bg_image(file_path.name)
+    
+    def __createAwayFromScreenWidget(self):
+        self.away_from_screen_checkbutton = Checkbutton(
+            root, variable=self._away_from_screen_status, text='Enable away from screen mode', command=lambda: _toggleAwayFromScreen())
+        self.away_from_screen_checkbutton.grid(row=5, column=0, sticky=W)
+
+        self.away_from_screen_uploadbutton = Button(
+            root, text=f"update your away pic", command=lambda: _updateDefaultPicture())
+
+        def _toggleAwayFromScreen():
+            self.service.away_from_screen_flag = bool(self._away_from_screen_status.get())
+            if self.service.away_from_screen_flag:
+                self.away_from_screen_uploadbutton.grid(
+                    row=6, column=1, sticky=W)
+                self.service.segment_utils.AWAY_FLAG = True
+            else:
+                self.service.segment_utils.AWAY_FLAG = False
+                self.away_from_screen_uploadbutton.grid_remove()
+
+        def _updateDefaultPicture():
+            file_path = askopenfile(mode='r', filetypes=[('Image Files', ['.jpeg', '.jpg', '.png', '.gif',
+                                                                          '.tiff', '.tif', '.bmp'])])
+            if file_path is not None:
+                self.service.segment_utils.set_default_img(file_path.name)
 
 root = Tk()
-root.geometry('360x360')
+root.geometry('720x720')
 my_gui = App(root)
 root.mainloop()
