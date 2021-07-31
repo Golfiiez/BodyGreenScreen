@@ -5,6 +5,7 @@ import tkinter
 from tkinter.ttk import *
 from tkinter.filedialog import askopenfile
 from service import Service
+from PIL import ImageColor
 
 
 class App(Frame):
@@ -21,7 +22,10 @@ class App(Frame):
         self.__createSecondaryModeWidget(self._mode_status.get())
 
         # virtualcamera service
+
+        # thread's events
         self.stopEvent = threading.Event()
+
         self.service = Service(self.stopEvent)
         self.thread = threading.Thread(
             target=self.service.run_service_loop, args=())
@@ -70,7 +74,6 @@ class App(Frame):
         self.radio_image.grid(row=2, column=2, sticky=W)
 
         def _radio_mode_select(*args):
-            print(self._mode_status.get())
             self.__updateSecondaryModeWidget(self._mode_status.get())
 
     def __createSecondaryModeWidget(self, mode_str):
@@ -83,30 +86,35 @@ class App(Frame):
 
         def _choose_color():
             color_code = colorchooser.askcolor(title="Choose color")
-            print(color_code)
+            # convert from rgb to bgr
+            self.service.segment_utils.set_mask_color( ( color_code[0][2], color_code[0][1], color_code[0][0] ) )
 
     def __updateSecondaryModeWidget(self, mode_str):
-        self.secondary_mode_label.destroy()
-        self.secondary_mode_option.destroy()
-        if mode_str == 'normal':
-            self.secondary_mode_label = Label(
-                root, text='Choose Background Color')
-            self.secondary_mode_option = Button(
-                root, text="Select Color", command=lambda: _choose_color())
+        self.service.segment_utils.set_mode(mode_str)
 
-        elif mode_str == 'image':
-            self.secondary_mode_label = Label(
-                root, text='Choose Background Image')
-            self.secondary_mode_option = Button(
-                root, text="Choose Image", command=lambda: _choose_color())
+        if mode_str != 'blur':
+            self.secondary_mode_label.destroy()
+            self.secondary_mode_option.destroy()
 
-        self.secondary_mode_label.grid(row=3, column=1, sticky=W)
-        self.secondary_mode_option.grid(row=4, column=1, sticky=W)
+            if mode_str == 'normal':
+                self.secondary_mode_label = Label(
+                    root, text='Choose Background Color')
+                self.secondary_mode_option = Button(
+                    root, text="Select Color", command=lambda: _choose_color())
+
+            elif mode_str == 'image':
+                self.secondary_mode_label = Label(
+                    root, text='Choose Background Image')
+                self.secondary_mode_option = Button(
+                    root, text="Choose Image", command=lambda: _choose_color())
+
+            self.secondary_mode_label.grid(row=3, column=1, sticky=W)
+            self.secondary_mode_option.grid(row=4, column=1, sticky=W)
 
         def _choose_color():
             color_code = colorchooser.askcolor(title="Choose color")
-            print(color_code)
-
+            # convert from rgb to bgr
+            self.service.segment_utils._MASK_COLOR = ( color_code[0][2], color_code[0][1], color_code[0][0] )
 
 root = Tk()
 root.geometry('360x360')

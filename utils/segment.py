@@ -18,14 +18,18 @@ class SegmentUtils():
         # set mode
         self._MODE_DEF_IMG = False
         self._MODE_BG_IMG = False
+        self._MODE = 'normal' 
 
         # set default threshold
         self._THRESHOLD = threshold
 
+    def set_mode(self, mode : str):
+        self._MODE = mode
+
     def update_threshold(self, threshold:float):
         self._THRESHOLD = threshold
 
-    def set_bg_color(self, bg_color: tuple):
+    def set_mask_color(self, bg_color: tuple):
         self._MASK_COLOR = bg_color
 
     def set_bg_image(self, path_to_image):
@@ -43,6 +47,20 @@ class SegmentUtils():
 
     def is_human_present(self, condition):
         return np.sum(np.invert(condition)) > 0
+
+    def change_bg( self, image ):
+        results = self.selfie_segmentation.process(image)
+        condition = np.stack(
+            (results.segmentation_mask,) * 3, axis=-1) > self._THRESHOLD
+
+        inv_condition = np.invert(condition)
+
+        masked_image = np.zeros(image.shape, dtype=np.uint8)
+        masked_image[:] = ( 0, 0, 0 )
+        bg_img = np.where(condition, self._BG_IMAGE, masked_image)
+        subject_img = np.where(inv_condition, image, masked_image)
+
+        return np.add( bg_img, subject_img )
 
     def display_default_img(self, frame):
         output_image = np.where(self._DEF_COND, self._DEF_IMAGE, frame)
@@ -64,6 +82,29 @@ class SegmentUtils():
         output_image = np.where(condition, image, masked_image)
 
         return output_image
+
+    def gaussian_blur( self, image, std : tuple = ( 99, 99 ) ):
+        results = self.selfie_segmentation.process(image)
+        condition = np.stack(
+            (results.segmentation_mask,) * 3, axis=-1) > self._THRESHOLD
+
+        inv_condition = np.invert( condition )
+
+        masked_image = np.zeros(image.shape, dtype=np.uint8)
+        masked_image[:] = ( 0, 0, 0 )
+
+        subject_part = np.where(condition, image, masked_image)
+        bg_part = np.where(inv_condition, image, masked_image)
+        
+        blur_subject_part = cv2.GaussianBlur( subject_part, std, 0 )
+
+        return np.add( blur_subject_part, bg_part  ).astype(np.uint8)
+
+    def process_img( self, image ):
+        if self._MODE == 'normal':
+            return self.segment_human_out( image )
+        elif self._MODE == 'blur':
+            return self.gaussian_blur( image )
 
     def away_from_screen_correction(self, image):
         results = self.selfie_segmentation.process(image)
