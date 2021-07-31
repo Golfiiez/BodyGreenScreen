@@ -64,3 +64,11 @@ class SegmentUtils():
 
         return output_image
 
+    def away_from_screen_correction(self, image):
+        results = self.selfie_segmentation.process(image)
+        condition = np.stack(
+            (results.segmentation_mask,) * 3, axis=-1) <= self._THRESHOLD
+
+        if not self.is_human_present(condition):
+            return self.display_default_img(image)
+        return image

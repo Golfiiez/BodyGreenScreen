@@ -15,7 +15,7 @@ cap = cv2.VideoCapture(1)
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fps = cap.get(cv2.CAP_PROP_FPS)
-default_image_path = './test_img/someone.jpg'
+default_image_path = './test_img/someone.png'
 
 segment_utils = segment.SegmentUtils()
 
@@ -25,8 +25,9 @@ with Camera(width, height, fps, fmt=PixelFormat.BGR) as cam:
     while cap.isOpened():
         success, image = cap.read()
         image = cv2.flip(image, 1)
+        image = segment_utils.away_from_screen_correction(image)
         output_image = segment_utils.segment_human_out(image)
-        cam.send(image)
+        cam.send(output_image)
         cam.sleep_until_next_frame()
 
 cap.release()
