@@ -22,6 +22,9 @@ class SegmentUtils():
         # set default threshold
         self._THRESHOLD = threshold
 
+    def update_threshold(self, threshold:float):
+        self._THRESHOLD = threshold
+
     def set_bg_color(self, bg_color: tuple):
         self._MASK_COLOR = bg_color
 
