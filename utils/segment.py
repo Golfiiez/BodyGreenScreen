@@ -52,14 +52,12 @@ class SegmentUtils():
         results = self.selfie_segmentation.process(image)
         condition = np.stack(
             (results.segmentation_mask,) * 3, axis=-1) <= self._THRESHOLD
+        
         # The background can be customized.
         #   a) Load an image (with the same width and height of the input image) to
         #      be the background, e.g., bg_image = cv2.imread('/path/to/image/file')
         #   b) Blur the input image by applying image filtering, e.g.,
         # bg_image = cv2.GaussianBlur(image,(55,55),0)
-
-        if not self.is_human_present(condition):
-            return self.display_default_img( image )
 
         masked_image = np.zeros(image.shape, dtype=np.uint8)
         masked_image[:] = self._MASK_COLOR

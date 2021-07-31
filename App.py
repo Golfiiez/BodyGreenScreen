@@ -1,15 +1,17 @@
 import threading
 from tkinter import *
-from tkinter import colorchooser
+from tkinter import colorchooser, messagebox
 import tkinter
 from tkinter.ttk import *
 from tkinter.filedialog import askopenfile
 from service import Service
 
+
 class App(Frame):
-    def __init__(self, root:Tk):
+    def __init__(self, root: Tk):
         self.root = root
         root.title("PROJECT_NAME_HERE")
+
         # widget preparation
         self._threshold_value = DoubleVar()
         self._mode_status = StringVar(value='normal')
@@ -17,12 +19,22 @@ class App(Frame):
         self.__createThresholdWidget()
         self.__createModeWidget()
         self.__createSecondaryModeWidget(self._mode_status.get())
-        # videostream service
+
+        # virtualcamera service
         self.stopEvent = threading.Event()
         self.service = Service(self.stopEvent)
-        self.thread = threading.Thread(target = self.service.run_service_loop,args=())
-        self.thread.start()
-        self.root.wm_protocol("WM_DELETE_WINDOW",self.__onClose)
+        self.thread = threading.Thread(
+            target=self.service.run_service_loop, args=())
+        self.root.wm_protocol("WM_DELETE_WINDOW", self.__onClose)
+        self.__initvcamservice()
+
+    def __initvcamservice(self):
+        try:
+            self.thread.start()
+        except Exception as e:
+            messagebox.showerror(
+                "Error starting virtual camera service", str(e))
+            self.__onClose()
 
     def __onClose(self):
         self.stopEvent.set()
