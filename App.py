@@ -76,8 +76,7 @@ class App(Frame):
         def _radioModeSelect(*args):
             self.service.segment_utils.update_mode_selected(
                 self._mode_status.get())
-
-            print(self._mode_status.get())
+            self.__createOrUpdateSecondaryModeWidget(self._mode_status.get())
 
     def __createOrUpdateSecondaryModeWidget(self, mode_str, create=False):
         if mode_str != 'blur':
@@ -95,7 +94,7 @@ class App(Frame):
                 self.secondary_mode_label = Label(
                     root, text='Choose Background Image')
                 self.secondary_mode_option = Button(
-                    root, text="Choose Image", command=lambda: _chooseColor())
+                    root, text="Choose Image", command=lambda: _chooseImage())
 
             self.secondary_mode_label.grid(row=3, column=1, sticky=W)
             self.secondary_mode_option.grid(row=4, column=1, sticky=W)
@@ -104,6 +103,13 @@ class App(Frame):
             color_code = colorchooser.askcolor(title="Choose color")
             # convert from rgb to bgr
             self.service.segment_utils._MASK_COLOR = ( color_code[0][2], color_code[0][1], color_code[0][0] )
+        
+        def _chooseImage():
+            file_path = askopenfile(mode='r', filetypes=[('Image Files', ['.jpeg', '.jpg', '.png',
+                                                       '.tiff', '.tif', '.bmp'])])
+            if file_path is not None:
+                print(str(file_path.name))
+                self.service.segment_utils.set_bg_image(file_path.name)
 
 root = Tk()
 root.geometry('360x360')

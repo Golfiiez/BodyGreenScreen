@@ -18,13 +18,14 @@ class Service():
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.fps = self.cap.get(cv2.CAP_PROP_FPS)
         self.default_image_path = './test_img/someone.jpg'
-        self.segment_utils = segment.SegmentUtils()
+        self.segment_utils = segment.SegmentUtils(self.width, self.height)
         self.stopEvent = stopEvent
 
     def run_service_loop(self):
         with Camera(self.width, self.height, self.fps, fmt=PixelFormat.BGR) as cam:
             print('Virtual camera device: ' + cam.device)
-            self.segment_utils.set_default_img(self.default_image_path, (self.width, self.height))
+            self.segment_utils.set_bg_image(self.default_image_path)
+            self.segment_utils.set_default_img(self.default_image_path)
             while not self.stopEvent.is_set():
                 success, image = self.cap.read()
                 image = cv2.flip(image, 1)
