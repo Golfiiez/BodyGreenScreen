@@ -5,6 +5,7 @@ import tkinter
 from tkinter.ttk import *
 from tkinter.filedialog import askopenfile
 from service import Service
+from PIL import ImageColor
 
 
 class App(Frame):
@@ -18,10 +19,13 @@ class App(Frame):
         self._secondary_mode_status = StringVar(value='img')
         self.__createThresholdWidget()
         self.__createModeWidget()
-        self.__updateSecondaryModeWidget(self._mode_status.get(), create=True)
+        self.__createOrUpdateSecondaryModeWidget(self._mode_status.get(), create=True)
 
         # virtualcamera service
+
+        # thread's events
         self.stopEvent = threading.Event()
+
         self.service = Service(self.stopEvent)
         self.thread = threading.Thread(
             target=self.service.run_service_loop, args=())
@@ -70,57 +74,36 @@ class App(Frame):
         self.radio_image.grid(row=2, column=2, sticky=W)
 
         def _radioModeSelect(*args):
-            self.service.segment_utils.update_mode_selected(self._mode_status.get())
-            
+            self.service.segment_utils.update_mode_selected(
+                self._mode_status.get())
+
             print(self._mode_status.get())
-            self.__updateSecondaryModeWidget(self._mode_status.get())
 
-    def __updateSecondaryModeWidget(self, mode_str, create=False):
-        if not create:
-            self.secondary_mode_label.destroy()
-            self.secondary_mode_option.destroy()
+    def __createOrUpdateSecondaryModeWidget(self, mode_str, create=False):
+        if mode_str != 'blur':
+            if not create:
+                self.secondary_mode_label.destroy() 
+                self.secondary_mode_option.destroy()
 
-        if mode_str == 'normal':
-            self.secondary_mode_label = Label(
-                root, text='Choose Background Color')
-            self.secondary_mode_option = Button(
-                root, text="Select Color", command=lambda: _chooseColor())
+            if mode_str == 'normal':
+                self.secondary_mode_label = Label(
+                    root, text='Choose Background Color')
+                self.secondary_mode_option = Button(
+                    root, text="Select Color", command=lambda: _chooseColor())
 
-        elif mode_str == 'image':
-            self.secondary_mode_label = Label(
-                root, text='Choose Background Image')
-            self.secondary_mode_option = Button(
-                root, text="Choose Image", command=lambda: _chooseImage())
+            elif mode_str == 'image':
+                self.secondary_mode_label = Label(
+                    root, text='Choose Background Image')
+                self.secondary_mode_option = Button(
+                    root, text="Choose Image", command=lambda: _chooseColor())
 
-        self.secondary_mode_label.grid(row=3, column=1, sticky=W)
-        self.secondary_mode_option.grid(row=4, column=1, sticky=W)
-
-        def _chooseColor():
-            color_code = colorchooser.askcolor(title="Choose color")
-            self.service.segment_utils.set_bg_color(color_code[0])
-            print(color_code)
-
-        def _chooseImage():
-            file_path = askopenfile(mode='r', filetypes=[('Image Files', ['.jpeg', '.jpg', '.png',
-                                                       '.tiff', '.tif', '.bmp'])])
-            if file_path is not None:
-                print(str(file_path.name))
-                self.service.segment_utils.set_default_img(file_path.name, (self.service.width, self.service.height))
-                
-            else:
-                _chooseImage()
-
-    def __createAwayFromScreenWidget(self, mode_str):
-        self.secondary_mode_label = Label(root, text='Choose Background Color')
-        self.secondary_mode_label.grid(row=3, column=1, sticky=W)
-
-        self.secondary_mode_option = Button(
-            root, text="Select Color", command=lambda: _chooseColor())
-        self.secondary_mode_option.grid(row=4, column=1, sticky=W)
+            self.secondary_mode_label.grid(row=3, column=1, sticky=W)
+            self.secondary_mode_option.grid(row=4, column=1, sticky=W)
 
         def _chooseColor():
             color_code = colorchooser.askcolor(title="Choose color")
-            print(color_code)
+            # convert from rgb to bgr
+            self.service.segment_utils._MASK_COLOR = ( color_code[0][2], color_code[0][1], color_code[0][0] )
 
 root = Tk()
 root.geometry('360x360')

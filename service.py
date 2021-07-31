@@ -12,7 +12,7 @@ from pyvirtualcam import PixelFormat, Camera
 # Query final capture device values
 # (may be different from preferred settings)
 class Service():
-    def __init__(self, stopEvent:threading.Event):
+    def __init__(self, stopEvent : threading.Event ):
         self.cap = cv2.VideoCapture(1)
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -28,8 +28,8 @@ class Service():
             while not self.stopEvent.is_set():
                 success, image = self.cap.read()
                 image = cv2.flip(image, 1)
-                image = self.segment_utils.away_from_screen_correction(image)
-                output_image = self.segment_utils.segment_human_out(image)
+                output_image = self.segment_utils.process_img(image)
+                # image = self.segment_utils.away_from_screen_correction(image)
                 cam.send(output_image)
                 cam.sleep_until_next_frame()
         self.cap.release()
