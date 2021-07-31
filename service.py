@@ -4,9 +4,7 @@ from tkinter import *
 from utils import segment
 from pyvirtualcam import PixelFormat, Camera
 
-# TODO: GUI
 # TODO: some video capture selection
-# TODO: threshold value slider
 # TODO: image path browser for replacement
 # TODO: mode swapping (gaussian blur ?)
 # TODO: make it's executionable in both windows and macOS (or just windows)
