@@ -48,7 +48,7 @@ class App(Frame):
         self.threshold_label = Label(root, text='Threshold')
         self.threshold_label.grid(row=0, column=0, sticky=W)
 
-        self.threshold = Scale(root, variable=self._threshold_value, from_=0, to=1,
+        self.threshold = Scale(root, variable=self._threshold_value, from_=1, to=0,
                                orient=HORIZONTAL, command=lambda *a: _sliderSelect(*a))
         self.threshold.grid(row=0, column=1, sticky=W)
         # update treshold
