@@ -67,8 +67,8 @@ class SegmentUtils():
         bg_img = np.where(condition, self._BG_IMAGE, image)
         return bg_img
 
-    def display_default_img(self, frame):
-        output_image = np.where(self._DEF_COND, self._DEF_IMAGE, frame)
+    def display_default_img(self, image):
+        output_image = np.where(self._DEF_COND, self._DEF_IMAGE, image)
         return output_image
 
     def segment_human_out(self, image):
@@ -101,12 +101,15 @@ class SegmentUtils():
     def process_img(self, image):
         if self.AWAY_FLAG:
             image = self.away_from_screen_correction(image)
-        if self._MODE == 'normal':
+            
+        if self._MODE == 'chroma':
             return self.segment_human_out(image)
         elif self._MODE == 'blur':
             return self.gaussian_blur(image)
         elif self._MODE == 'image':
             return self.change_bg(image)
+        else:
+            return image
 
     def away_from_screen_correction(self, image):
         results = self.selfie_segmentation.process(image)
