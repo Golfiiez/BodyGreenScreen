@@ -17,7 +17,7 @@ class Service():
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.fps = self.cap.get(cv2.CAP_PROP_FPS)
-        self.default_image_path = './test_img/someone.jpg'
+        self.default_image_path = './default_img/someone.png'
         self.segment_utils = segment.SegmentUtils(self.width, self.height)
         self.stopEvent = stopEvent
 
@@ -29,8 +29,8 @@ class Service():
             while not self.stopEvent.is_set():
                 success, image = self.cap.read()
                 image = cv2.flip(image, 1)
-                output_image = self.segment_utils.process_img(image)
-                # image = self.segment_utils.away_from_screen_correction(image)
+                image = self.segment_utils.process_img(image)
+                output_image = cv2.flip(image, 1)
                 cam.send(output_image)
                 cam.sleep_until_next_frame()
         self.cap.release()
