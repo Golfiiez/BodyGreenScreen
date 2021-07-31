@@ -66,7 +66,7 @@ class App(Frame):
         self.secondary_mode_label.grid(row=3, column=1, sticky=W)
 
         self.secondary_mode_option = Button(
-            root, text="Choose Image", command=lambda: _choose_color())
+            root, text="Select Color", command=lambda: _choose_color())
         self.secondary_mode_option.grid(row=4, column=1, sticky=W)
 
         def _choose_color():
@@ -80,7 +80,7 @@ class App(Frame):
             self.secondary_mode_label = Label(
                 root, text='Choose Background Color')
             self.secondary_mode_option = Button(
-                root, text="Select color", command=lambda: _choose_color())
+                root, text="Select Color", command=lambda: _choose_color())
 
         elif mode_str == 'image':
             self.secondary_mode_label = Label(
