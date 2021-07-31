@@ -38,7 +38,8 @@ class App(Frame):
         # update treshold
 
         def _slider_select(*args):
-            print(self._threshold_value.get())
+            threshold_value = self._threshold_value.get()
+            self.service.segment_utils.update_threshold(threshold_value)
 
     def __createModeWidget(self):
         # update select radio button (nornal/ blur)

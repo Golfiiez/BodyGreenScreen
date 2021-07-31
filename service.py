@@ -27,7 +27,7 @@ class Service():
         with Camera(self.width, self.height, self.fps, fmt=PixelFormat.BGR) as cam:
             print('Virtual camera device: ' + cam.device)
             self.segment_utils.set_default_img(self.default_image_path, (self.width, self.height))
-            while self.stopEvent.is_set():
+            while not self.stopEvent.is_set():
                 success, image = self.cap.read()
                 image = cv2.flip(image, 1)
                 image = self.segment_utils.away_from_screen_correction(image)
