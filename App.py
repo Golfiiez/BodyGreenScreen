@@ -23,6 +23,7 @@ class App(Frame):
         self.__createOrUpdateSecondaryModeWidget(self._mode_status.get())
         self.__createAwayFromScreenWidget()
         self.__createServiceWidget()
+        self.__initVCamService()
 
     def __initVCamService(self):
         self.stop_event = threading.Event()
@@ -146,7 +147,7 @@ class App(Frame):
 
     def __createServiceWidget(self):
         self.vcam_service_status = StringVar()
-        self.vcam_service_status.set('Start Vcam')
+        self.vcam_service_status.set('Stop Vcam')
         self.vcam_service_button = Button(
             root, textvariable=self.vcam_service_status,
             command=lambda: _toggleVCamService())
