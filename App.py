@@ -11,7 +11,7 @@ from PIL import ImageColor
 class App(Frame):
     def __init__(self, root: Tk):
         self.root = root
-        root.title("Green Screen Me Config")
+        root.title("Body Green Screen")
 
         # widget preparation
         self._threshold_value = DoubleVar()
@@ -22,19 +22,15 @@ class App(Frame):
         self.__createModeWidget()
         self.__createOrUpdateSecondaryModeWidget(self._mode_status.get())
         self.__createAwayFromScreenWidget()
-
-        # virtualcamera service
-
-        # thread's events
-        self.stopEvent = threading.Event()
-
-        self.service = Service(self.stopEvent)
-        self.thread = threading.Thread(
-            target=self.service.run_service_loop, args=())
-        self.root.wm_protocol("WM_DELETE_WINDOW", self.__onClose)
-        self.__initVCamService()
+        self.__createServiceWidget()
 
     def __initVCamService(self):
+        self.stop_event = threading.Event()
+        self.service = Service(self.stop_event)
+        self.thread = threading.Thread(
+            target=self.service.run_service_loop, args=())
+
+    def __startVCamService(self):
         try:
             self.thread.start()
         except Exception as e:
@@ -42,8 +38,16 @@ class App(Frame):
                 "Error starting virtual camera service", str(e))
             self.__onClose()
 
+    def __killVCamService(self):
+        try:
+            self.stop_event.set()
+        except Exception as e:
+            messagebox.showerror(
+                "Error stopping virtual camera service", str(e))
+            self.__onClose()
+
     def __onClose(self):
-        self.stopEvent.set()
+        self.stop_event.set()
         self.root.quit()
 
     def __createThresholdWidget(self):
@@ -84,10 +88,10 @@ class App(Frame):
             self.__createOrUpdateSecondaryModeWidget(self._mode_status.get())
 
     def __createOrUpdateSecondaryModeWidget(self, mode_str):
-        if hasattr(self,'secondary_mode_label'):
-            self.secondary_mode_label.destroy() 
+        if hasattr(self, 'secondary_mode_label'):
+            self.secondary_mode_label.destroy()
             self.secondary_mode_option.destroy()
-        if mode_str in {'chroma','image'}:
+        if mode_str in {'chroma', 'image'}:
             if mode_str == 'chroma':
                 self.secondary_mode_label = Label(
                     root, text='Choose Background Color')
@@ -99,21 +103,22 @@ class App(Frame):
                     root, text='Choose Background Image')
                 self.secondary_mode_option = Button(
                     root, text="Choose Image", command=lambda: _chooseImage())
-            
+
             self.secondary_mode_label.grid(row=3, column=1, sticky=W)
             self.secondary_mode_option.grid(row=4, column=1, sticky=W)
 
         def _chooseColor():
             color_code = colorchooser.askcolor(title="Choose color")
             # convert from rgb to bgr
-            self.service.segment_utils._MASK_COLOR = ( color_code[0][2], color_code[0][1], color_code[0][0] )
-        
+            self.service.segment_utils._MASK_COLOR = (
+                color_code[0][2], color_code[0][1], color_code[0][0])
+
         def _chooseImage():
             file_path = askopenfile(mode='r', filetypes=[('Image Files', ['.jpeg', '.jpg', '.png',
-                                                       '.tiff', '.tif', '.bmp'])])
+                                                                          '.tiff', '.tif', '.bmp'])])
             if file_path is not None:
                 self.service.segment_utils.set_bg_image(file_path.name)
-    
+
     def __createAwayFromScreenWidget(self):
         self.away_from_screen_checkbutton = Checkbutton(
             root, variable=self._away_from_screen_status, text='Enable away from screen mode', command=lambda: _toggleAwayFromScreen())
@@ -123,7 +128,8 @@ class App(Frame):
             root, text=f"update your away pic", command=lambda: _updateDefaultPicture())
 
         def _toggleAwayFromScreen():
-            self.service.away_from_screen_flag = bool(self._away_from_screen_status.get())
+            self.service.away_from_screen_flag = bool(
+                self._away_from_screen_status.get())
             if self.service.away_from_screen_flag:
                 self.away_from_screen_uploadbutton.grid(
                     row=6, column=1, sticky=W)
@@ -137,6 +143,24 @@ class App(Frame):
                                                                           '.tiff', '.tif', '.bmp'])])
             if file_path is not None:
                 self.service.segment_utils.set_default_img(file_path.name)
+
+    def __createServiceWidget(self):
+        self.vcam_service_status = StringVar()
+        self.vcam_service_status.set('Start Vcam')
+        self.vcam_service_button = Button(
+            root, textvariable=self.vcam_service_status,
+            command=lambda: _toggleVCamService())
+        self.vcam_service_button.grid(row=7, column=1, sticky=W)
+
+        def _toggleVCamService():
+            if hasattr(self,'thread') and self.thread.is_alive():
+                self.__killVCamService()
+                self.vcam_service_status.set('Start VCam')
+            else:
+                self.__initVCamService()
+                self.__startVCamService()
+                self.vcam_service_status.set('Stop VCam')
+
 
 root = Tk()
 root.geometry('800x200')
