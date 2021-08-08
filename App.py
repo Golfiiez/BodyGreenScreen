@@ -18,10 +18,6 @@ class App(Frame):
         self._mode_status = StringVar(value='normal')
         self._secondary_mode_status = StringVar(value='img')
         self._away_from_screen_status = IntVar(value=0)
-        self.__createThresholdWidget()
-        self.__createModeWidget()
-        self.__createOrUpdateSecondaryModeWidget(self._mode_status.get())
-        self.__createAwayFromScreenWidget()
         self.__createServiceWidget()
         self.__initVCamService()
 
@@ -34,6 +30,10 @@ class App(Frame):
     def __startVCamService(self):
         try:
             self.thread.start()
+            self.__createThresholdWidget()
+            self.__createModeWidget()
+            self.__createOrUpdateSecondaryModeWidget(self._mode_status.get())
+            self.__createAwayFromScreenWidget()
         except Exception as e:
             messagebox.showerror(
                 "Error starting virtual camera service", str(e))
@@ -42,6 +42,10 @@ class App(Frame):
     def __killVCamService(self):
         try:
             self.stop_event.set()
+            self.__killThresholdWidget()
+            self.__killModeWidget()
+            self.__killSecondaryModeWidget()
+            self.__killAwayFromScreenWidget()
         except Exception as e:
             messagebox.showerror(
                 "Error stopping virtual camera service", str(e))
@@ -63,6 +67,10 @@ class App(Frame):
         def _sliderSelect(*args):
             threshold_value = self._threshold_value.get()
             self.service.segment_utils.update_threshold(threshold_value)
+    
+    def __killThresholdWidget(self):
+        self.threshold_label.destroy()
+        self.threshold.destroy()
 
     def __createModeWidget(self):
         # update select radio button (normal/ blur)
@@ -73,9 +81,9 @@ class App(Frame):
         self.radio_normal = Radiobutton(
             root, text='Normal', variable=self._mode_status, value='normal', command=lambda: _radioModeSelect())
         self.radio_normal.grid(row=2, column=1, sticky=W)
-        self.radio_normal = Radiobutton(
+        self.radio_chroma = Radiobutton(
             root, text='Chroma Key', variable=self._mode_status, value='chroma', command=lambda: _radioModeSelect())
-        self.radio_normal.grid(row=2, column=2, sticky=W)
+        self.radio_chroma.grid(row=2, column=2, sticky=W)
         self.radio_blur = Radiobutton(root, text='Gaussian blur', variable=self._mode_status,
                                       value='blur', command=lambda: _radioModeSelect())
         self.radio_blur.grid(row=2, column=3, sticky=W)
@@ -87,11 +95,17 @@ class App(Frame):
             self.service.segment_utils.update_mode_selected(
                 self._mode_status.get())
             self.__createOrUpdateSecondaryModeWidget(self._mode_status.get())
+    
+    def __killModeWidget(self):
+        self.mode_label.destroy()
+        self.radio_normal.destroy()
+        self.radio_chroma.destroy()
+        self.radio_blur.destroy()
+        self.radio_image.destroy()
 
     def __createOrUpdateSecondaryModeWidget(self, mode_str):
         if hasattr(self, 'secondary_mode_label'):
-            self.secondary_mode_label.destroy()
-            self.secondary_mode_option.destroy()
+            self.__killSecondaryModeWidget()
         if mode_str in {'chroma', 'image'}:
             if mode_str == 'chroma':
                 self.secondary_mode_label = Label(
@@ -120,6 +134,11 @@ class App(Frame):
             if file_path is not None:
                 self.service.segment_utils.set_bg_image(file_path.name)
 
+    def __killSecondaryModeWidget(self):
+        if hasattr(self,'secondary_mode_label'):
+            self.secondary_mode_label.destroy()
+            self.secondary_mode_option.destroy()
+
     def __createAwayFromScreenWidget(self):
         self.away_from_screen_checkbutton = Checkbutton(
             root, variable=self._away_from_screen_status, text='Enable away from screen mode', command=lambda: _toggleAwayFromScreen())
@@ -144,10 +163,14 @@ class App(Frame):
                                                                           '.tiff', '.tif', '.bmp'])])
             if file_path is not None:
                 self.service.segment_utils.set_default_img(file_path.name)
+    
+    def __killAwayFromScreenWidget(self):
+        self.away_from_screen_checkbutton.destroy()
+        self.away_from_screen_uploadbutton.destroy()
 
     def __createServiceWidget(self):
         self.vcam_service_status = StringVar()
-        self.vcam_service_status.set('Stop Vcam')
+        self.vcam_service_status.set('Start Vcam')
         self.vcam_service_button = Button(
             root, textvariable=self.vcam_service_status,
             command=lambda: _toggleVCamService())
